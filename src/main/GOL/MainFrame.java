@@ -213,13 +213,10 @@ public class MainFrame extends JFrame{
 	}
 	
 	// moves time by one step
-	public void updateGrid() {
-		List<Point> addCoordinates = new ArrayList<Point>();
-		List<Point> delCoordinates = new ArrayList<Point>();
+	public synchronized ArrayList<ArrayList<Point>> prepareUpdateGrid() {
+		ArrayList<Point> addCoordinates = new ArrayList<Point>();
+		ArrayList<Point> delCoordinates = new ArrayList<Point>();
 		Map<Point, Integer> reproducedCoordinates = new HashMap<Point, Integer>();
-		
-		// increment age
-		gridPanel.grid.replaceAll((point, age) -> age+1);
 		
 		for (Point point:gridPanel.grid.keySet()) {
 			List<Point> neighbourCoords = getNeighbourCoords(point);
@@ -240,18 +237,32 @@ public class MainFrame extends JFrame{
 			}
 		}
 		
-		for (Point addCoordinate:addCoordinates) {
-			gridPanel.grid.put(addCoordinate, 0);
+		ArrayList<ArrayList<Point>> prepareUpdateLists = new ArrayList<ArrayList<Point>>();
+		prepareUpdateLists.add(addCoordinates);
+		prepareUpdateLists.add(delCoordinates);
+		
+		return prepareUpdateLists;
+	}
+	
+	public synchronized void updateGrid(ArrayList<ArrayList<Point>> prepareUpdateLists) {
+		/// update grid
+		gridPanel.gridLock.writeLock().lock();
+		try {
+			// increment age
+			gridPanel.grid.replaceAll((point, age) -> age+1);
+			
+			// add and delete coordinates
+			for (Point addCoordinate:prepareUpdateLists.get(0)) {
+				gridPanel.grid.put(addCoordinate, 0);
+			}
+			
+			for (Point delCoordinate:prepareUpdateLists.get(1)) {
+				gridPanel.grid.remove(delCoordinate);
+			}
+			gridPanel.steps += 1;
+		} finally {
+			gridPanel.gridLock.writeLock().unlock();
 		}
-		
-		for (Point delCoordinate:delCoordinates) {
-			gridPanel.grid.remove(delCoordinate);
-		}
-		
-		gridPanel.redrawMap();
-		gridPanel.repaint();
-		
-		gridPanel.steps += 1;
 	}
 	
 	public void updatePause(boolean paused) {
@@ -641,7 +652,9 @@ public class MainFrame extends JFrame{
 	private class StepFrameAction extends AbstractAction{
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			updateGrid();
+			updateGrid(prepareUpdateGrid());
+			gridPanel.repaint();
+			gridPanel.redrawMap();
 		}
 	}
 	

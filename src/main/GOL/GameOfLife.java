@@ -1,7 +1,9 @@
 package main.GOL;
 
 import java.awt.EventQueue;
+import java.awt.Point;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 
 public class GameOfLife{
 	public static void main(String[] args) {
@@ -26,14 +28,19 @@ public class GameOfLife{
 					try {
 						Thread.sleep(mainFrame.gridPanel.msDelay);
 					} catch (InterruptedException e) {
-						e.printStackTrace();
+						break;
 					}
 					if (!mainFrame.gridPanel.pause) {
-						EventQueue.invokeLater(new Runnable() {
-							public void run() {
-								mainFrame.updateGrid();
-							}
-						});
+						ArrayList<ArrayList<Point>> prepareUpdate = mainFrame.prepareUpdateGrid();
+						if (!mainFrame.gridPanel.pause) {
+							mainFrame.updateGrid(prepareUpdate);
+							EventQueue.invokeLater(new Runnable() {
+								public void run() {
+									mainFrame.gridPanel.redrawMap();
+									mainFrame.gridPanel.repaint();
+								}
+							});
+						}
 					}
 				}
 			}

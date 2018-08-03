@@ -14,6 +14,8 @@ import java.awt.event.MouseWheelListener;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
@@ -61,9 +63,12 @@ public class GridPanel extends JPanel{
 	// info
 	public int steps;
 	
-	// other
+	// viewable and actual grid
 	private Tile[][] gridViewable;
 	public Map<Point, Integer> grid = new ConcurrentHashMap<Point, Integer>();
+	
+	// actual grid lock
+	ReadWriteLock gridLock = new ReentrantReadWriteLock();
 	
 	// control
 	public boolean pause = true;
@@ -91,20 +96,6 @@ public class GridPanel extends JPanel{
 		addMouseListener(new MouseGridListener());
 		addMouseMotionListener(new MouseMovementGridListener());
 		addMouseWheelListener(new MouseWheelGridListener());
-	}
-	
-	public void resetGrid() {
-		steps = 0;
-		gridViewable = new Tile[viewableHeight+2][viewableWidth+2];
-		grid = new ConcurrentHashMap<Point, Integer>();
-		
-		// create tiles
-		for (int i=0; i<viewableHeight+2; i++) {
-			for (int j=0; j<viewableWidth+2; j++) {
-				Tile newTile = createTile(topLeftX+j, topLeftY+i, -1);
-				gridViewable[i][j] = newTile;
-			}
-		}
 	}
 	
 	@Override
@@ -155,8 +146,43 @@ public class GridPanel extends JPanel{
 		g2.drawString(thirdLine, 0, fmVert*3);
 	}
 	
+	public synchronized void resetGrid() {
+		steps = 0;
+		gridViewable = new Tile[viewableHeight+2][viewableWidth+2];
+		
+		gridLock.writeLock().lock();
+		
+		try {
+			grid = new ConcurrentHashMap<Point, Integer>();
+		} finally {
+			gridLock.writeLock().unlock();
+		}
+		
+		// create tiles
+		for (int i=0; i<viewableHeight+2; i++) {
+			for (int j=0; j<viewableWidth+2; j++) {
+				Tile newTile = createTile(topLeftX+j, topLeftY+i, -1);
+				gridViewable[i][j] = newTile;
+			}
+		}
+	}
+	
+	// this method doesn't clear the screen, make sure to do that first. also doesn't repaint the map
+	private synchronized void remakeViewableTiles() {
+		gridViewable = new Tile[viewableHeight+2][viewableWidth+2];
+		// create buttons
+		for (int i=0; i<viewableHeight+2; i++) {
+			for(int j=0; j<viewableWidth+2; j++) {
+				Point coordinate = new Point(j+topLeftX, i+topLeftY);
+				int age = grid.containsKey(coordinate)?grid.get(coordinate):-1;
+				Tile newTile = createTile(topLeftX+j, topLeftY+i, age);
+				gridViewable[i][j] = newTile;
+			}
+		}
+	}
+	
 	// updates the tiles. does not resize or move grid.
-	public void redrawMap() {
+	public synchronized void redrawMap() {
 		for (int i=0; i<viewableHeight+2; i++) {
 			for(int j=0; j<viewableWidth+2; j++) {
 				Tile checkTile = gridViewable[i][j];
@@ -184,20 +210,6 @@ public class GridPanel extends JPanel{
 		newTile.updateMark(age);
 		
 		return newTile;
-	}
-	
-	// this method doesn't clear the screen, make sure to do that first. also doesn't repaint the map
-	private void remakeViewableTiles() {
-		gridViewable = new Tile[viewableHeight+2][viewableWidth+2];
-		// create buttons
-		for (int i=0; i<viewableHeight+2; i++) {
-			for(int j=0; j<viewableWidth+2; j++) {
-				Point coordinate = new Point(j+topLeftX, i+topLeftY);
-				int age = grid.containsKey(coordinate)?grid.get(coordinate):-1;
-				Tile newTile = createTile(topLeftX+j, topLeftY+i, age);
-				gridViewable[i][j] = newTile;
-			}
-		}
 	}
 	
 	public boolean markGrid(int x, int y) {
@@ -388,25 +400,27 @@ public class GridPanel extends JPanel{
 		public void mouseDragged(MouseEvent e) {
 			int draggedMouseX = e.getX();
 			int draggedMouseY = e.getY();
-			if (e.isControlDown()) {
-				dragScreen(mouseX-draggedMouseX, mouseY-draggedMouseY);
-			}
-			else {
-				if (SwingUtilities.isLeftMouseButton(e)) {
-					List<Point> coordinates = GeometryUtility.getLine(mouseX, mouseY, draggedMouseX, draggedMouseY);
-					for (Point coordinate:coordinates) {
-						clickGrid(coordinate.x, coordinate.y, true);
+			if (draggedMouseX >= 0 && draggedMouseX <= gridPixelWidth && draggedMouseY >= 0 && draggedMouseY <= gridPixelHeight) {
+				if (e.isControlDown()) {
+					dragScreen(mouseX-draggedMouseX, mouseY-draggedMouseY);
+				}
+				else {
+					if (SwingUtilities.isLeftMouseButton(e)) {
+						List<Point> coordinates = GeometryUtility.getLine(mouseX, mouseY, draggedMouseX, draggedMouseY);
+						for (Point coordinate:coordinates) {
+							clickGrid(coordinate.x, coordinate.y, true);
+						}
+					}
+					else if (SwingUtilities.isRightMouseButton(e)) {
+						List<Point> coordinates = GeometryUtility.getLine(mouseX, mouseY, draggedMouseX, draggedMouseY);
+						for (Point coordinate:coordinates) {
+							clickGrid(coordinate.x, coordinate.y, false);
+						}
 					}
 				}
-				else if (SwingUtilities.isRightMouseButton(e)) {
-					List<Point> coordinates = GeometryUtility.getLine(mouseX, mouseY, draggedMouseX, draggedMouseY);
-					for (Point coordinate:coordinates) {
-						clickGrid(coordinate.x, coordinate.y, false);
-					}
-				}
+				mouseX = draggedMouseX;
+				mouseY = draggedMouseY;
 			}
-			mouseX = draggedMouseX;
-			mouseY = draggedMouseY;
 		}
 
 		@Override
