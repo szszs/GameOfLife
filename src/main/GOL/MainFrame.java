@@ -69,7 +69,15 @@ public class MainFrame extends JFrame{
 	private final String RESET = "reset";
 	
 	private final Font font = new Font("Helvetica", Font.PLAIN, 20);
-	private final String helpMessage = "Keybinds: \n Zoom In/Out: CTRL+/- or use mouse wheel \n Drag Screen: CTRL+Click Mouse";
+	private final String helpMessage = ""
+			+ "Controls:\n"
+			+ "Create alive cell: left click\n"
+			+ "Kill cell: right click\n"
+			+ "Pause/Unpause: SPACEBAR (also on toolbar)\n"
+			+ "Increment generation: ENTER (also on toolbar)\n"
+			+ "Clear grid: BACKSPACE (also on edit menu)\n"
+			+ "Zoom in/out: CTRL+/- or use mouse wheel\n"
+			+ "Pan screen: CTRL+click mouse and drag\n";
 	
 	private final FileNameExtensionFilter[] fileTypes = new FileNameExtensionFilter[] {
 		new FileNameExtensionFilter("Life (*.life)", "life")	
@@ -450,9 +458,8 @@ public class MainFrame extends JFrame{
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
 				if (e.getSource() == controls) {
-					
+					JOptionPane.showMessageDialog(null, helpMessage, "Controls", JOptionPane.INFORMATION_MESSAGE);
 				}
 			}
 		}
