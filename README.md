@@ -9,3 +9,7 @@ This is a simulation program made to visualize and construct worlds for John Con
 * Allows saving and loading worlds in a custom file format
 * Keeps track of cell age
 * Allows user to change the game rules manually
+
+### Screenshots:
+Maze generation using B3S12345 rule
+![alt text](https://i.imgur.com/9Kw553g.png)
