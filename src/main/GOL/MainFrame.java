@@ -19,6 +19,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -85,7 +86,9 @@ public class MainFrame extends JFrame{
 			+ "Pan screen: CTRL+click mouse and drag\n";
 	
 	private final FileNameExtensionFilter[] fileTypes = new FileNameExtensionFilter[] {
-		new FileNameExtensionFilter("Life (*.life)", "life")	
+		new FileNameExtensionFilter("Run Length Encoded (*.rle)", "rle"),
+		new FileNameExtensionFilter("Life Sim (*.lifesim)", "lifesim"),
+		new FileNameExtensionFilter("Plaintext (*.cells)", "cells")
 	};
 	
 	public MainFrame(String title) {
@@ -257,6 +260,29 @@ public class MainFrame extends JFrame{
 		toolBar.updatePauseIcon(paused);
 	}
 	
+	public Point[] getGridBounds() {
+		Point[] bounds = new Point[2];
+		
+		/// get furthest left x-coordinate
+		// get set of all x and y coordinates
+		Set<Integer> xCoords = new HashSet<Integer>();
+		Set<Integer> yCoords = new HashSet<Integer>();
+		for (Point coordinate:gridPanel.grid.keySet()) {
+			xCoords.add(coordinate.x);
+			yCoords.add(coordinate.y);
+		}
+		int topLeftX = Collections.min(xCoords);
+		int topLeftY = Collections.min(yCoords);
+		
+		int bottomRightX = Collections.max(xCoords);
+		int bottomRightY = Collections.max(yCoords);
+		
+		bounds[0] = new Point(topLeftX, topLeftY);
+		bounds[1] = new Point(bottomRightX, bottomRightY);
+		
+		return bounds;
+	}
+	
 	public void saveFile(File saveFile, FileNameExtensionFilter selectedFileType) {
 		String extension = '.' + selectedFileType.getExtensions()[0];
 		
@@ -280,7 +306,7 @@ public class MainFrame extends JFrame{
 			
 			// convert grid to text
 			
-			if (extension.equals(".life")) {
+			if (extension.equals(".lifesim")) {
 				// add top left corner
 				lines.add(String.format("%d %d", gridPanel.topLeftX, gridPanel.topLeftY));
 				// add living coordinates
@@ -288,6 +314,26 @@ public class MainFrame extends JFrame{
 					lines.add(String.format("%d %d", point.x, point.y));
 				}
 			}
+			
+			else if (extension.equals(".cells")) {
+				Point[] gridBounds = getGridBounds();
+				Point topLeftCoords = gridBounds[0];
+				Point bottomRightCoords = gridBounds[1];
+				
+				for(int y=topLeftCoords.y;y<=bottomRightCoords.y;y++) {
+					String line = "";
+					for(int x=topLeftCoords.x;x<=bottomRightCoords.x;x++) {
+						if(gridPanel.grid.containsKey(new Point(x, y))) {
+							line += "O";
+						}
+						else {
+							line += ".";
+						}
+					}
+					lines.add(line);
+				}
+			}
+			
 			try {
 				Files.write(saveFile.toPath(), lines);
 			} catch (IOException e) {
@@ -298,27 +344,49 @@ public class MainFrame extends JFrame{
 	
 	public void loadFile(File loadFile, FileNameExtensionFilter selectedFileType) {
 		try {
+			Scanner sc = new Scanner(loadFile);
+			String extension = '.' + selectedFileType.getExtensions()[0];
+			
 			updatePause(true);
 			gridPanel.resetGrid();
 			
-			Scanner sc = new Scanner(loadFile);
-			
-			// get top left corner
-			gridPanel.topLeftX = sc.nextInt();
-			gridPanel.topLeftY = sc.nextInt();
-			
-			while(sc.hasNextInt()) {
-				int x = sc.nextInt();
-				int y = sc.nextInt();
-				gridPanel.grid.put(new Point(x, y), 0);
+			// load grid
+			if (extension.equals(".lifesim")) {
+				// get top left corner
+				gridPanel.topLeftX = sc.nextInt();
+				gridPanel.topLeftY = sc.nextInt();
+				
+				while(sc.hasNextInt()) {
+					int x = sc.nextInt();
+					int y = sc.nextInt();
+					gridPanel.grid.put(new Point(x, y), 0);
+				}
 			}
-			
+			else if (extension.equals(".cells")) {
+				gridPanel.topLeftX = 0;
+				gridPanel.topLeftY = 0;
+				
+				int y=0;
+				
+				while(sc.hasNextLine()) {
+					String line = sc.nextLine();
+					if (!line.startsWith("!")) {
+						int x=0;
+						for(char cell:line.toCharArray()) {
+							if (cell == 'O') {
+								gridPanel.grid.put(new Point(x, y), 0);
+							}
+							x++;
+						}
+						y++;
+					}
+				}
+			}
 			sc.close();
 
 			gridPanel.redrawMap();
 			
 		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.out.println("error opening file");
 		}
