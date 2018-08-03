@@ -6,6 +6,7 @@ import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
+import java.awt.GridLayout;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -30,13 +31,17 @@ import java.util.Set;
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JCheckBox;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
@@ -382,6 +387,7 @@ public class MainFrame extends JFrame{
 		private JMenu editBar;
 		private EditMenuListener editMenuListener;
 		private JMenuItem clearGrid;
+		private JMenuItem changeRule;
 		
 		private JMenu helpBar;
 		private HelpMenuListener helpMenuListener;
@@ -407,6 +413,9 @@ public class MainFrame extends JFrame{
 			clearGrid = new JMenuItem("Clear grid (BACKSPACE)");
 			clearGrid.addActionListener(new ResetAction());
 			editBar.add(clearGrid);
+			changeRule = new JMenuItem("Change game rules");
+			changeRule.addActionListener(editMenuListener);
+			editBar.add(changeRule);
 			add(editBar);
 			
 			/// help bar (last)
@@ -422,6 +431,7 @@ public class MainFrame extends JFrame{
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				updatePause(true);
 				if (e.getSource() == saveFile) {
 					JFileChooser fileChooser = new JFileChooser();
 					for (FileNameExtensionFilter fileType:fileTypes) {
@@ -450,14 +460,67 @@ public class MainFrame extends JFrame{
 		public class EditMenuListener implements ActionListener{
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
+				updatePause(true);
+				if (e.getSource() == changeRule) {
+					JPanel changeRulePanel = new JPanel();
+					changeRulePanel.setLayout(new GridLayout(4, 1));
+					changeRulePanel.setFont(font);
+					
+					JLabel bornLabel = new JLabel("Select number of neighbours for cell to be born:");
+					JLabel surviveLabel = new JLabel("Select number of neighbours for cell to survive:");
+					JPanel bornOptionsPanel = new JPanel(new FlowLayout());
+					JPanel surviveOptionsPanel = new JPanel(new FlowLayout());
+					JCheckBox[] bornOptions = new JCheckBox[9];
+					JCheckBox[] surviveOptions = new JCheckBox[9];
+					
+					bornLabel.setFont(font);
+					surviveLabel.setFont(font);
+					for (int i=0; i<9; i++) {
+						bornOptions[i] = new JCheckBox(Integer.toString(i));
+						bornOptions[i].setFont(font);
+						if (bornRules.contains(i)) {
+							bornOptions[i].doClick();
+						}
+						bornOptionsPanel.add(bornOptions[i]);
+						
+						surviveOptions[i] = new JCheckBox(Integer.toString(i));
+						surviveOptions[i].setFont(font);
+						if (surviveRules.contains(i)) {
+							surviveOptions[i].doClick();
+						}
+						surviveOptionsPanel.add(surviveOptions[i]);
+					}
+					
+					changeRulePanel.add(bornLabel);
+					changeRulePanel.add(bornOptionsPanel);
+					changeRulePanel.add(surviveLabel);
+					changeRulePanel.add(surviveOptionsPanel);
+					
+					int result = JOptionPane.showConfirmDialog(null, changeRulePanel, "Enter rule:", JOptionPane.OK_CANCEL_OPTION);
+					
+					if (result == JOptionPane.OK_OPTION) {
+						// update rules
+						bornRules.clear();
+						surviveRules.clear();
+						
+						for (int i=0; i<9; i++) {
+							if (bornOptions[i].isSelected()) {
+								bornRules.add(i);
+							}
+							if (surviveOptions[i].isSelected()) {
+								surviveRules.add(i);
+							}
+						}
+					}
 				}
 			}
+		}
 		
 		public class HelpMenuListener implements ActionListener {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				updatePause(true);
 				if (e.getSource() == controls) {
 					JOptionPane.showMessageDialog(null, helpMessage, "Controls", JOptionPane.INFORMATION_MESSAGE);
 				}
@@ -517,7 +580,7 @@ public class MainFrame extends JFrame{
 	private class ResetAction extends AbstractAction{
 		@Override
 		public void actionPerformed(ActionEvent e) {
-			gridPanel.pause = true;
+			updatePause(true);
 			gridPanel.topLeftX = 0;
 			gridPanel.topLeftY = 0;
 			gridPanel.resetGrid();
