@@ -28,6 +28,8 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
 import javax.swing.ImageIcon;
@@ -274,14 +276,13 @@ public class MainFrame extends JFrame{
 	public Point[] getGridBounds() {
 		Point[] bounds = new Point[2];
 		
-		/// get furthest left x-coordinate
-		// get set of all x and y coordinates
 		Set<Integer> xCoords = new HashSet<Integer>();
 		Set<Integer> yCoords = new HashSet<Integer>();
 		for (Point coordinate:gridPanel.grid.keySet()) {
 			xCoords.add(coordinate.x);
 			yCoords.add(coordinate.y);
 		}
+		
 		int topLeftX = Collections.min(xCoords);
 		int topLeftY = Collections.min(yCoords);
 		
@@ -345,6 +346,78 @@ public class MainFrame extends JFrame{
 				}
 			}
 			
+			else if (extension.equals(".rle")) {
+				Point[] gridBounds = getGridBounds();
+				Point topLeftCoords = gridBounds[0];
+				Point bottomRightCoords = gridBounds[1];
+				
+				int width = bottomRightCoords.x - topLeftCoords.x + 1;
+				int height = bottomRightCoords.y - topLeftCoords.y + 1;
+				
+				lines.add(String.format("x = %d, y = %d", width, height));
+				
+				String rawLines = "";
+				int emptyLinesTrack = 0;
+				for(int y=topLeftCoords.y;y<=bottomRightCoords.y;y++) {
+					String line = "";
+					boolean emptyLine = true;
+					List<Boolean> lineData = new ArrayList<Boolean>();
+					for(int x=topLeftCoords.x;x<=bottomRightCoords.x;x++) {
+						boolean alive = gridPanel.grid.containsKey(new Point(x, y));
+						lineData.add(alive);
+						if (alive)
+							emptyLine = false;
+					}
+					
+					if (emptyLine) {
+						emptyLinesTrack++;
+					}
+					else {
+						if (emptyLinesTrack > 0) {
+							rawLines += Integer.toString(emptyLinesTrack) + "$";
+							emptyLinesTrack = 0;
+						}
+						try {
+							boolean recentState = lineData.get(0);
+							int numOfState = 0;
+							for(boolean alive:lineData) {
+								if (alive == recentState) {
+									numOfState++;
+								}
+								else {
+									// add states
+									String stateString = recentState?"o":"b";
+									if (numOfState > 1) {
+										line += Integer.toString(numOfState) + stateString;
+									}
+									else {
+										line += stateString;
+									}
+									recentState = alive;
+									numOfState = 1;
+								}
+							}
+							// add final state
+							if (recentState) {
+								if (numOfState > 1) {
+									line += Integer.toString(numOfState) + "o";
+								}
+								else {
+									line += "o";
+								}
+							}
+							
+							line += "$";
+							rawLines += line;
+						} catch (IndexOutOfBoundsException e) {}
+					}
+				}
+				rawLines = rawLines.substring(0, rawLines.length()-1) + "!";
+				for (int i=0; i<=rawLines.length(); i+=70) {
+					lines.add(rawLines.substring(i, Math.min(i+70, rawLines.length())));
+				}
+			}
+			
 			try {
 				Files.write(saveFile.toPath(), lines);
 			} catch (IOException e) {
@@ -391,6 +464,66 @@ public class MainFrame extends JFrame{
 						}
 						y++;
 					}
+				}
+			}
+			else if (extension.equals(".rle")) {
+				int xLen;
+				int yLen;
+				while(sc.hasNextLine()) {
+					String line = sc.nextLine();
+					
+					// find starting line
+					if (line.startsWith("x")) {
+						Scanner lineScanner = new Scanner(line);
+						lineScanner.useDelimiter("\\D+");
+						xLen = lineScanner.nextInt();
+						yLen = lineScanner.nextInt();
+						lineScanner.close();
+						break;
+					}
+				}
+				
+				int y = 0;
+				sc.useDelimiter("\\$");
+				while(sc.hasNext()) {
+					// process new line
+					String line = sc.next();
+					Matcher lineMatcher = Pattern.compile("\\d+|b|o|!").matcher(line);
+					
+					int x = 0;
+					boolean emptyLine = false;
+					
+					while (lineMatcher.find()) {
+						String tileType = lineMatcher.group();
+						int amount = 1;
+						
+						try {
+							// check if tileType is really an integer
+							amount = Integer.parseInt(tileType);
+							if (lineMatcher.find())
+								tileType = lineMatcher.group();
+							else {
+								// increment new line
+								y += amount;
+								emptyLine = true;
+								break;
+							}
+						} catch (NumberFormatException e) {}
+						
+						if (tileType.equals("o")) {
+							for (int i=0;i<amount;i++) {
+								gridPanel.grid.put(new Point(x+i, y), 0);
+							}
+						}
+						else if (tileType.equals("!")) {
+							break;
+						}
+						
+						x += amount;
+					}
+					
+					if (!emptyLine)
+						y += 1;
 				}
 			}
 			sc.close();
@@ -512,6 +645,11 @@ public class MainFrame extends JFrame{
 			public void actionPerformed(ActionEvent e) {
 				updatePause(true);
 				if (e.getSource() == saveFile) {
+					// check if grid is empty
+					if (gridPanel.grid.isEmpty()) {
+						JOptionPane.showMessageDialog(null, "Error: the grid is empty!", "Error", JOptionPane.ERROR_MESSAGE);
+						return;
+					}
 					JFileChooser fileChooser = new JFileChooser();
 					for (FileNameExtensionFilter fileType:fileTypes) {
 						fileChooser.addChoosableFileFilter(fileType);
