@@ -11,5 +11,7 @@ This is a simulation program made to visualize and construct worlds for John Con
 * Allows user to change the game rules manually
 
 ### Screenshots:
+Simulating Jason Summers' Fermat prime calculator
+![alt text](https://i.imgur.com/MLSrM3J.png)
 Maze generation using B3S12345 rule
 ![alt text](https://i.imgur.com/9Kw553g.png)
