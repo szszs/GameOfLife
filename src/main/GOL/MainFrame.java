@@ -818,9 +818,10 @@ public class MainFrame extends JFrame{
 					changeOldColor.setFont(font);
 					
 					// make slider
-					ageSlider = new JSlider(JSlider.HORIZONTAL, 0, newAge*2, newAge);
-					ageSlider.setMajorTickSpacing(newAge/2);
-					ageSlider.setMinorTickSpacing(newAge/10);
+					int maxAgeSlider = Math.max(newAge*2, 10);
+					ageSlider = new JSlider(JSlider.HORIZONTAL, 0, maxAgeSlider, newAge);
+					ageSlider.setMajorTickSpacing(maxAgeSlider/2);
+					ageSlider.setMinorTickSpacing(maxAgeSlider/10);
 					ageSlider.setPaintTicks(true);
 					ageSlider.setPaintLabels(true);
 					
