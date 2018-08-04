@@ -57,7 +57,7 @@ public class GridPanel extends JPanel{
 	private double zoomFactor=1.0;
 	// zoom constants
 	private static final double ZOOM_FACTOR_MAX=4.0;
-	private static final double ZOOM_FACTOR_MIN=0.2;
+	private static final double ZOOM_FACTOR_MIN=0.05;
 	private static final double ZOOM_WHEEL_SPEED=0.15;
 	
 	// info
@@ -192,6 +192,15 @@ public class GridPanel extends JPanel{
 				checkTile.updateMark(age);
 				
 				checkTile.changeCoordinates(topLeftX+j, topLeftY+i);
+			}
+		}
+	}
+	
+	public void updateTileColors() {
+		for (int i=0; i<viewableHeight+2; i++) {
+			for (int j=0; j<viewableWidth+2; j++) {
+				Tile checkTile = gridViewable[i][j];
+				checkTile.updateColor();
 			}
 		}
 	}

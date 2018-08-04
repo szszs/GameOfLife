@@ -32,9 +32,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.swing.AbstractAction;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JColorChooser;
 import javax.swing.JComponent;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
@@ -49,6 +51,7 @@ import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 @SuppressWarnings("serial")
@@ -108,13 +111,19 @@ public class MainFrame extends JFrame{
 			bornRules.add(bornRule);
 		}
 		
-		setLayout(new BorderLayout());
-		c = getContentPane();
-		c.setBackground(Color.GREEN);
-		
+		try {
+			UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		UIManager.put("Menu.font", font);
 		UIManager.put("MenuItem.font", font);
 		UIManager.put("OptionPane.messageFont", font);
+		UIManager.put("ColorChooser.font", font);
+		
+		setLayout(new BorderLayout());
+		c = getContentPane();
+		c.setBackground(Color.GREEN);
 		
 		/// create grid panel
 		gridPanel = new GridPanel(20, 20, 15, 20*20, 20*15, 0, 0);
@@ -307,7 +316,7 @@ public class MainFrame extends JFrame{
 		boolean writeFile = true;
 		
 		if (saveFile.exists()) {
-		    int reply = JOptionPane.showConfirmDialog(null, "File already exists, overwrite?", "Overwrite?", JOptionPane.YES_NO_OPTION);
+		    int reply = JOptionPane.showConfirmDialog(null, "File already exists, overwrite?", "Overwrite?", JOptionPane.YES_NO_OPTION, JOptionPane.PLAIN_MESSAGE);
 	        if (reply != JOptionPane.YES_OPTION) {
 	        	writeFile = false;
 	        }
@@ -600,6 +609,9 @@ public class MainFrame extends JFrame{
 		private EditMenuListener editMenuListener;
 		private JMenuItem clearGrid;
 		private JMenuItem changeRule;
+		private JMenu preferences;
+		private PreferencesMenuListener preferencesMenuListener;
+		private JMenuItem changeColors;
 		
 		private JMenu helpBar;
 		private HelpMenuListener helpMenuListener;
@@ -628,6 +640,12 @@ public class MainFrame extends JFrame{
 			changeRule = new JMenuItem("Change game rules");
 			changeRule.addActionListener(editMenuListener);
 			editBar.add(changeRule);
+			preferences = new JMenu("Preferences");
+			preferencesMenuListener = new PreferencesMenuListener();
+			changeColors = new JMenuItem("Colors");
+			changeColors.addActionListener(preferencesMenuListener);
+			preferences.add(changeColors);
+			editBar.add(preferences);
 			add(editBar);
 			
 			/// help bar (last)
@@ -647,7 +665,7 @@ public class MainFrame extends JFrame{
 				if (e.getSource() == saveFile) {
 					// check if grid is empty
 					if (gridPanel.grid.isEmpty()) {
-						JOptionPane.showMessageDialog(null, "Error: the grid is empty!", "Error", JOptionPane.ERROR_MESSAGE);
+						JOptionPane.showMessageDialog(null, "Error: the grid is empty!", "Error", JOptionPane.PLAIN_MESSAGE);
 						return;
 					}
 					JFileChooser fileChooser = new JFileChooser();
@@ -713,7 +731,7 @@ public class MainFrame extends JFrame{
 					changeRulePanel.add(surviveLabel);
 					changeRulePanel.add(surviveOptionsPanel);
 					
-					int result = JOptionPane.showConfirmDialog(null, changeRulePanel, "Enter rule:", JOptionPane.OK_CANCEL_OPTION);
+					int result = JOptionPane.showConfirmDialog(null, changeRulePanel, "Enter rule:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 					
 					if (result == JOptionPane.OK_OPTION) {
 						// update rules
@@ -733,13 +751,152 @@ public class MainFrame extends JFrame{
 			}
 		}
 		
+		public class PreferencesMenuListener implements ActionListener{
+			private JPanel colorChangePanel;
+			private JButton changeGridOne;
+			private JButton changeGridTwo;
+			private JButton changeYoungColor;
+			private JButton changeOldColor;
+			private JPanel gridOnePreview;
+			private JPanel gridTwoPreview;
+			private JPanel youngPreview;
+			private JPanel oldPreview;
+			private Color newGridOneColor;
+			private Color newGridTwoColor;
+			private Color newYoungColor;
+			private Color newOldColor;
+			private Color oldGridOneColor;
+			private Color oldGridTwoColor;
+			private Color oldYoungColor;
+			private Color oldOldColor;
+			
+			private ColorChangeListener colorChangeListener;
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				if (e.getSource() == changeColors) {
+					updatePause(true);
+					
+					oldGridOneColor = Tile.gridColorOne;
+					oldGridTwoColor = Tile.gridColorTwo;
+					oldYoungColor = Tile.youngColor;
+					oldOldColor = Tile.oldColor;
+					
+					newGridOneColor = Tile.gridColorOne;
+					newGridTwoColor = Tile.gridColorTwo;
+					newYoungColor = Tile.youngColor;
+					newOldColor = Tile.oldColor;
+					
+					colorChangePanel = new JPanel();
+					colorChangePanel.setLayout(new GridLayout(4, 2));
+					colorChangePanel.setFont(font);
+					changeGridOne = new JButton("Change Grid Color One");
+					changeGridTwo = new JButton("Change Grid Color Two");
+					changeYoungColor = new JButton("Change Young Cell Color");
+					changeOldColor = new JButton("Change Old Cell Color");
+					gridOnePreview = new JPanel();
+					gridTwoPreview = new JPanel();
+					youngPreview = new JPanel();
+					oldPreview = new JPanel();
+					gridOnePreview.setBackground(newGridOneColor);
+					gridTwoPreview.setBackground(newGridTwoColor);
+					youngPreview.setBackground(newYoungColor);
+					oldPreview.setBackground(newOldColor);
+					changeGridOne.setFont(font);
+					changeGridTwo.setFont(font);
+					changeYoungColor.setFont(font);
+					changeOldColor.setFont(font);
+					colorChangePanel.add(changeGridOne);
+					colorChangePanel.add(changeGridTwo);
+					colorChangePanel.add(gridOnePreview);
+					colorChangePanel.add(gridTwoPreview);
+					colorChangePanel.add(changeYoungColor);
+					colorChangePanel.add(changeOldColor);
+					colorChangePanel.add(youngPreview);
+					colorChangePanel.add(oldPreview);
+					
+					// add listeners
+					colorChangeListener = new ColorChangeListener();
+					changeGridOne.addActionListener(colorChangeListener);
+					changeGridTwo.addActionListener(colorChangeListener);
+					changeYoungColor.addActionListener(colorChangeListener);
+					changeOldColor.addActionListener(colorChangeListener);
+					int result = JOptionPane.showConfirmDialog(null, colorChangePanel, "Change color:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+					if (result == JOptionPane.OK_OPTION) {
+						Tile.gridColorOne = newGridOneColor;
+						Tile.gridColorTwo = newGridTwoColor;
+						Tile.youngColor = newYoungColor;
+						Tile.oldColor = newOldColor;
+					}
+					else {
+						Tile.gridColorOne = oldGridOneColor;
+						Tile.gridColorTwo = oldGridTwoColor;
+						Tile.youngColor = oldYoungColor;
+						Tile.oldColor = oldOldColor;
+					}
+					
+					gridPanel.updateTileColors();
+					gridPanel.repaint();
+				}
+			}
+			
+			private class ColorChangeListener implements ActionListener {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					JColorChooser chooseNewColor = new JColorChooser();
+					chooseNewColor.setFont(font);
+					if (e.getSource() == changeGridOne) {
+						chooseNewColor.setColor(newGridOneColor);
+						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Grid Color One:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+						if (result == JOptionPane.OK_OPTION) {
+							newGridOneColor = chooseNewColor.getColor();
+							gridOnePreview.setBackground(newGridOneColor);
+						}
+					}
+					else if (e.getSource() == changeGridTwo) {
+						chooseNewColor.setColor(newGridTwoColor);
+						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Grid Color Two:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+						if (result == JOptionPane.OK_OPTION) {
+							newGridTwoColor = chooseNewColor.getColor();
+							gridTwoPreview.setBackground(newGridTwoColor);
+						}
+					}
+					else if (e.getSource() == changeYoungColor) {
+						chooseNewColor.setColor(newYoungColor);
+						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Young Cell Color:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+						if (result == JOptionPane.OK_OPTION) {
+							newYoungColor = chooseNewColor.getColor();
+							youngPreview.setBackground(newYoungColor);
+						}
+					}
+					else if (e.getSource() == changeOldColor) {
+						chooseNewColor.setColor(newOldColor);
+						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Old Cell Color:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+						if (result == JOptionPane.OK_OPTION) {
+							newOldColor = chooseNewColor.getColor();
+							oldPreview.setBackground(newOldColor);
+						}
+					}
+					
+					Tile.gridColorOne = newGridOneColor;
+					Tile.gridColorTwo = newGridTwoColor;
+					Tile.youngColor = newYoungColor;
+					Tile.oldColor = newOldColor;
+					
+					gridPanel.updateTileColors();
+					gridPanel.repaint();
+				}
+			}
+		}
+		
 		public class HelpMenuListener implements ActionListener {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				updatePause(true);
 				if (e.getSource() == controls) {
-					JOptionPane.showMessageDialog(null, helpMessage, "Controls", JOptionPane.INFORMATION_MESSAGE);
+					JOptionPane.showMessageDialog(null, helpMessage, "Controls", JOptionPane.PLAIN_MESSAGE);
 				}
 			}
 		}

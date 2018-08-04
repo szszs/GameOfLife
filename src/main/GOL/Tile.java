@@ -7,11 +7,11 @@ public class Tile {
 	private int y;
 	public int age;
 	private Color color;
-	private static final Color gridColorOne = Color.BLACK;
-	private static final Color gridColorTwo = new Color(20, 20, 20);
-	private int maxAge=5;
-	private static Color youngColor = new Color(204, 102, 0);
-	private static Color oldColor = new Color(100, 0, 0);
+	public static Color gridColorOne = Color.BLACK;
+	public static Color gridColorTwo = new Color(20, 20, 20);
+	public static Color youngColor = new Color(204, 102, 0);
+	public static Color oldColor = new Color(100, 0, 0);
+	public int maxAge=100;
 	
 	public Tile(int x, int y) {
 		changeCoordinates(x, y);
@@ -34,7 +34,10 @@ public class Tile {
 	// -1 for dead
 	public void updateMark(int age) {
 		this.age = age;
-		
+		this.updateColor();
+	}
+	
+	public void updateColor() {
 		if (age == -1)
 			setBackground(getTiledColor());
 		else if (age >= maxAge)
