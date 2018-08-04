@@ -46,6 +46,7 @@ public class GridPanel extends JPanel{
 	private static final Color highlightColor = new Color (0.5f, 0.5f, 0.5f, 0.5f);
 	private static final Color BORDER_COLOR = Color.DARK_GRAY;
 	private static final Color textColor = Color.WHITE;
+	private static final Color infoBackgroundColor = new Color(0f, 0f, 0f, 0.5f);
 	private static final Font textFont = new Font("Helvetica", Font.PLAIN, 20);
 	
 	/// border lengths
@@ -57,7 +58,7 @@ public class GridPanel extends JPanel{
 	private double zoomFactor=1.0;
 	// zoom constants
 	private static final double ZOOM_FACTOR_MAX=4.0;
-	private static final double ZOOM_FACTOR_MIN=0.05;
+	private static final double ZOOM_FACTOR_MIN=0.1;
 	private static final double ZOOM_WHEEL_SPEED=0.15;
 	
 	// info
@@ -127,22 +128,27 @@ public class GridPanel extends JPanel{
 		g2.fillRect(-(tileSize-leftSideOffset)+relativeX*tileSize, -(tileSize-topSideOffset)+relativeY*tileSize, tileSize, tileSize);
 		
 		// paint info
-		g2.setColor(textColor);
-		g2.setFont(textFont);
 		FontMetrics fm = getFontMetrics(textFont);
 		int fmVert = fm.getAscent();
 		
 		String firstLine = String.format("Generations: %d", steps);
 		if (pause)
 			firstLine += " (PAUSED)";
-		g2.drawString(firstLine, 0, fmVert);
-		
 		String secondLine = String.format("Delay: %d ms", msDelay);
-		g2.drawString(secondLine, 0, fmVert*2);
 		
 		String thirdLine = String.format("(%d, %d)", relativeX+topLeftX, relativeY+topLeftY);
 		if (highlightedTile.age != -1)
 			thirdLine += String.format(" Age: %d", highlightedTile.age);
+		
+		int infoBackgroundWidth = Math.max(fm.stringWidth(firstLine), Math.max(fm.stringWidth(secondLine), fm.stringWidth(thirdLine)));
+		g2.setColor(infoBackgroundColor);
+		g2.fillRect(0, 0, infoBackgroundWidth+3, fmVert*3+5);
+		
+		g2.setColor(textColor);
+		g2.setFont(textFont);
+		
+		g2.drawString(firstLine, 0, fmVert);
+		g2.drawString(secondLine, 0, fmVert*2);
 		g2.drawString(thirdLine, 0, fmVert*3);
 	}
 	
