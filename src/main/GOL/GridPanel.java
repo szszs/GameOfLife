@@ -23,8 +23,8 @@ import javax.swing.SwingUtilities;
 @SuppressWarnings("serial")
 public class GridPanel extends JPanel{
 	// width and height of viewable grid in tiles, excluding the outer border
-	private int viewableHeight;
-	private int viewableWidth;
+	public int viewableHeight;
+	public int viewableWidth;
 	
 	// width and height of window in pixels, including visible borders
 	public int gridPixelWidth;

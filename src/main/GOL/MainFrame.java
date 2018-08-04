@@ -482,8 +482,8 @@ public class MainFrame extends JFrame{
 				}
 			}
 			else if (extension.equals(".rle")) {
-				int xLen;
-				int yLen;
+				int xLen=0;
+				int yLen=0;
 				while(sc.hasNextLine()) {
 					String line = sc.nextLine();
 					
@@ -497,6 +497,9 @@ public class MainFrame extends JFrame{
 						break;
 					}
 				}
+				
+				gridPanel.topLeftX = xLen / 2 - gridPanel.viewableWidth / 2;
+				gridPanel.topLeftY = yLen / 2 - gridPanel.viewableHeight / 2;
 				
 				int y = 0;
 				sc.useDelimiter("\\$");
