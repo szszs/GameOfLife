@@ -10,7 +10,7 @@ public class Tile {
 	public static Color gridColor = Color.BLACK;
 	public static Color youngColor = new Color(204, 102, 0);
 	public static Color oldColor = new Color(100, 0, 0);
-	public int maxAge=100;
+	public static int maxAge=100;
 	
 	public Tile(int x, int y) {
 		changeCoordinates(x, y);

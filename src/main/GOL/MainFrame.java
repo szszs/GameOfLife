@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
+import java.awt.EventQueue;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
@@ -46,12 +47,17 @@ import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JSlider;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.JToolBar;
 import javax.swing.KeyStroke;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 @SuppressWarnings("serial")
@@ -768,18 +774,29 @@ public class MainFrame extends JFrame{
 			
 			private ColorChangeListener colorChangeListener;
 			
+			private JSlider ageSlider;
+			private AgeSliderListener ageSliderListener;
+			private JPanel ageChangerInfo;
+			private JLabel ageInfo;
+			private JTextField ageChanger;
+			private AgeChangerListener ageChangerListener;
+			private int oldAge;
+			private int newAge;
+			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				if (e.getSource() == changeColors) {
 					updatePause(true);
-					
+					// prepare old and new preferences
 					oldGridColor = Tile.gridColor;
 					oldYoungColor = Tile.youngColor;
 					oldOldColor = Tile.oldColor;
+					oldAge = Tile.maxAge;
 					
 					newGridColor = Tile.gridColor;
 					newYoungColor = Tile.youngColor;
 					newOldColor = Tile.oldColor;
+					newAge = Tile.maxAge;
 					
 					colorChangePanel = new JPanel();
 					colorChangePanel.setLayout(new GridLayout(4, 2));
@@ -796,10 +813,33 @@ public class MainFrame extends JFrame{
 					changeGridColor.setFont(font);
 					changeYoungColor.setFont(font);
 					changeOldColor.setFont(font);
+					
+					// make slider
+					ageSlider = new JSlider(JSlider.HORIZONTAL, 0, newAge*2, newAge);
+					ageSlider.setMajorTickSpacing(newAge/2);
+					ageSlider.setMinorTickSpacing(newAge/10);
+					ageSlider.setPaintTicks(true);
+					ageSlider.setPaintLabels(true);
+					
+					ageSliderListener = new AgeSliderListener();
+					ageSlider.addChangeListener(ageSliderListener);
+					
+					// make age changer
+					ageChangerInfo = new JPanel(new BorderLayout());
+					ageInfo = new JLabel(" Max age: ");
+					ageChanger = new JTextField();
+					ageChanger.setText(Integer.toString(newAge));
+					ageChangerInfo.add(ageInfo, BorderLayout.WEST);
+					ageChangerInfo.add(ageChanger, BorderLayout.CENTER);
+					
+					ageChangerListener = new AgeChangerListener();
+					ageChanger.getDocument().addDocumentListener(ageChangerListener);
+					
+					// add components
 					colorChangePanel.add(changeGridColor);
-					colorChangePanel.add(new JPanel());
+					colorChangePanel.add(ageSlider);
 					colorChangePanel.add(gridPreview);
-					colorChangePanel.add(new JPanel());
+					colorChangePanel.add(ageChangerInfo);
 					colorChangePanel.add(changeYoungColor);
 					colorChangePanel.add(changeOldColor);
 					colorChangePanel.add(youngPreview);
@@ -815,11 +855,13 @@ public class MainFrame extends JFrame{
 						Tile.gridColor = newGridColor;
 						Tile.youngColor = newYoungColor;
 						Tile.oldColor = newOldColor;
+						Tile.maxAge = newAge;
 					}
 					else {
 						Tile.gridColor = oldGridColor;
 						Tile.youngColor = oldYoungColor;
 						Tile.oldColor = oldOldColor;
+						Tile.maxAge = oldAge;
 					}
 					
 					gridPanel.updateTileColors();
@@ -864,6 +906,58 @@ public class MainFrame extends JFrame{
 					
 					gridPanel.updateTileColors();
 					gridPanel.repaint();
+				}
+			}
+			
+			private class AgeSliderListener implements ChangeListener{
+				@Override
+				public void stateChanged(ChangeEvent e) {
+					if (!ageSlider.getValueIsAdjusting()) {
+						int age = ageSlider.getValue();
+						newAge = age;
+						ageChanger.getDocument().removeDocumentListener(ageChangerListener);
+						ageChanger.setText(Integer.toString(newAge));
+						ageChanger.getDocument().addDocumentListener(ageChangerListener);
+						Tile.maxAge = newAge;
+						
+						gridPanel.updateTileColors();
+						gridPanel.repaint();
+					}
+				}
+			}
+			
+			private class AgeChangerListener implements DocumentListener{
+
+				@Override
+				public void changedUpdate(DocumentEvent e) {
+				}
+
+				@Override
+				public void insertUpdate(DocumentEvent e) {
+					updateSlider();
+				}
+
+				@Override
+				public void removeUpdate(DocumentEvent e) {
+					updateSlider();
+				}
+				
+				private void updateSlider() {
+					try {
+						int possibleNewAge = Integer.parseInt(ageChanger.getText());
+						EventQueue.invokeLater(new Runnable() {
+							public void run() {
+								if (possibleNewAge > ageSlider.getMaximum()) {
+									ageSlider.setMaximum(possibleNewAge);
+									ageSlider.setLabelTable(null);
+									ageSlider.setMajorTickSpacing(possibleNewAge/2);
+									ageSlider.setMinorTickSpacing(possibleNewAge/10);
+								}
+								ageSlider.setValue(possibleNewAge);
+							}
+						});
+					}
+					catch (NumberFormatException e1){}
 				}
 			}
 		}
