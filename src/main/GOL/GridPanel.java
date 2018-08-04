@@ -105,16 +105,21 @@ public class GridPanel extends JPanel{
 		Graphics2D g2 = (Graphics2D) g;
 		
 		removeAll();
-		
-		// paint grid including border tiles
+		// paint background
+		g2.setColor(Tile.gridColor);
+		g2.fillRect(0, 0, gridPixelWidth, gridPixelHeight);
+		// paint alive tiles
 		for (int i=0; i<viewableHeight+2; i++) {
 			for (int j=0; j<viewableWidth+2; j++) {
 				Tile tile = gridViewable[i][j];
-				g2.setColor(tile.getBackgroundColor());
-				g2.fillRect(-(tileSize-leftSideOffset)+j*tileSize, -(tileSize-topSideOffset)+i*tileSize, tileSize, tileSize);
-				g2.setColor(BORDER_COLOR);
-				if (gridOn)
+				if (tile.age != -1) {
+					g2.setColor(tile.getBackgroundColor());
+					g2.fillRect(-(tileSize-leftSideOffset)+j*tileSize, -(tileSize-topSideOffset)+i*tileSize, tileSize, tileSize);
+				}
+				if (gridOn) {
+					g2.setColor(BORDER_COLOR);
 					g2.drawRect(-(tileSize-leftSideOffset)+j*tileSize, -(tileSize-topSideOffset)+i*tileSize, tileSize, tileSize);
+				}
 			}
 		}
 		

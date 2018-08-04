@@ -753,20 +753,16 @@ public class MainFrame extends JFrame{
 		
 		public class PreferencesMenuListener implements ActionListener{
 			private JPanel colorChangePanel;
-			private JButton changeGridOne;
-			private JButton changeGridTwo;
+			private JButton changeGridColor;
 			private JButton changeYoungColor;
 			private JButton changeOldColor;
-			private JPanel gridOnePreview;
-			private JPanel gridTwoPreview;
+			private JPanel gridPreview;
 			private JPanel youngPreview;
 			private JPanel oldPreview;
-			private Color newGridOneColor;
-			private Color newGridTwoColor;
+			private Color newGridColor;
 			private Color newYoungColor;
 			private Color newOldColor;
-			private Color oldGridOneColor;
-			private Color oldGridTwoColor;
+			private Color oldGridColor;
 			private Color oldYoungColor;
 			private Color oldOldColor;
 			
@@ -777,39 +773,33 @@ public class MainFrame extends JFrame{
 				if (e.getSource() == changeColors) {
 					updatePause(true);
 					
-					oldGridOneColor = Tile.gridColorOne;
-					oldGridTwoColor = Tile.gridColorTwo;
+					oldGridColor = Tile.gridColor;
 					oldYoungColor = Tile.youngColor;
 					oldOldColor = Tile.oldColor;
 					
-					newGridOneColor = Tile.gridColorOne;
-					newGridTwoColor = Tile.gridColorTwo;
+					newGridColor = Tile.gridColor;
 					newYoungColor = Tile.youngColor;
 					newOldColor = Tile.oldColor;
 					
 					colorChangePanel = new JPanel();
 					colorChangePanel.setLayout(new GridLayout(4, 2));
 					colorChangePanel.setFont(font);
-					changeGridOne = new JButton("Change Grid Color One");
-					changeGridTwo = new JButton("Change Grid Color Two");
+					changeGridColor = new JButton("Change Grid Color");
 					changeYoungColor = new JButton("Change Young Cell Color");
 					changeOldColor = new JButton("Change Old Cell Color");
-					gridOnePreview = new JPanel();
-					gridTwoPreview = new JPanel();
+					gridPreview = new JPanel();
 					youngPreview = new JPanel();
 					oldPreview = new JPanel();
-					gridOnePreview.setBackground(newGridOneColor);
-					gridTwoPreview.setBackground(newGridTwoColor);
+					gridPreview.setBackground(newGridColor);
 					youngPreview.setBackground(newYoungColor);
 					oldPreview.setBackground(newOldColor);
-					changeGridOne.setFont(font);
-					changeGridTwo.setFont(font);
+					changeGridColor.setFont(font);
 					changeYoungColor.setFont(font);
 					changeOldColor.setFont(font);
-					colorChangePanel.add(changeGridOne);
-					colorChangePanel.add(changeGridTwo);
-					colorChangePanel.add(gridOnePreview);
-					colorChangePanel.add(gridTwoPreview);
+					colorChangePanel.add(changeGridColor);
+					colorChangePanel.add(new JPanel());
+					colorChangePanel.add(gridPreview);
+					colorChangePanel.add(new JPanel());
 					colorChangePanel.add(changeYoungColor);
 					colorChangePanel.add(changeOldColor);
 					colorChangePanel.add(youngPreview);
@@ -817,20 +807,17 @@ public class MainFrame extends JFrame{
 					
 					// add listeners
 					colorChangeListener = new ColorChangeListener();
-					changeGridOne.addActionListener(colorChangeListener);
-					changeGridTwo.addActionListener(colorChangeListener);
+					changeGridColor.addActionListener(colorChangeListener);
 					changeYoungColor.addActionListener(colorChangeListener);
 					changeOldColor.addActionListener(colorChangeListener);
 					int result = JOptionPane.showConfirmDialog(null, colorChangePanel, "Change color:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 					if (result == JOptionPane.OK_OPTION) {
-						Tile.gridColorOne = newGridOneColor;
-						Tile.gridColorTwo = newGridTwoColor;
+						Tile.gridColor = newGridColor;
 						Tile.youngColor = newYoungColor;
 						Tile.oldColor = newOldColor;
 					}
 					else {
-						Tile.gridColorOne = oldGridOneColor;
-						Tile.gridColorTwo = oldGridTwoColor;
+						Tile.gridColor = oldGridColor;
 						Tile.youngColor = oldYoungColor;
 						Tile.oldColor = oldOldColor;
 					}
@@ -846,20 +833,12 @@ public class MainFrame extends JFrame{
 				public void actionPerformed(ActionEvent e) {
 					JColorChooser chooseNewColor = new JColorChooser();
 					chooseNewColor.setFont(font);
-					if (e.getSource() == changeGridOne) {
-						chooseNewColor.setColor(newGridOneColor);
-						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Grid Color One:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+					if (e.getSource() == changeGridColor) {
+						chooseNewColor.setColor(newGridColor);
+						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Grid Color:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
 						if (result == JOptionPane.OK_OPTION) {
-							newGridOneColor = chooseNewColor.getColor();
-							gridOnePreview.setBackground(newGridOneColor);
-						}
-					}
-					else if (e.getSource() == changeGridTwo) {
-						chooseNewColor.setColor(newGridTwoColor);
-						int result = JOptionPane.showConfirmDialog(null, chooseNewColor, "Select Grid Color Two:", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-						if (result == JOptionPane.OK_OPTION) {
-							newGridTwoColor = chooseNewColor.getColor();
-							gridTwoPreview.setBackground(newGridTwoColor);
+							newGridColor = chooseNewColor.getColor();
+							gridPreview.setBackground(newGridColor);
 						}
 					}
 					else if (e.getSource() == changeYoungColor) {
@@ -879,8 +858,7 @@ public class MainFrame extends JFrame{
 						}
 					}
 					
-					Tile.gridColorOne = newGridOneColor;
-					Tile.gridColorTwo = newGridTwoColor;
+					Tile.gridColor = newGridColor;
 					Tile.youngColor = newYoungColor;
 					Tile.oldColor = newOldColor;
 					

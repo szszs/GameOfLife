@@ -7,20 +7,13 @@ public class Tile {
 	private int y;
 	public int age;
 	private Color color;
-	public static Color gridColorOne = Color.BLACK;
-	public static Color gridColorTwo = new Color(20, 20, 20);
+	public static Color gridColor = Color.BLACK;
 	public static Color youngColor = new Color(204, 102, 0);
 	public static Color oldColor = new Color(100, 0, 0);
 	public int maxAge=100;
 	
 	public Tile(int x, int y) {
 		changeCoordinates(x, y);
-	}
-	
-	public Color getTiledColor() {
-		if ((x+y)%2 == 0)
-			return gridColorOne;
-		return gridColorTwo;
 	}
 	
 	public void setBackground(Color color) {
@@ -39,7 +32,7 @@ public class Tile {
 	
 	public void updateColor() {
 		if (age == -1)
-			setBackground(getTiledColor());
+			setBackground(gridColor);
 		else if (age >= maxAge)
 			setBackground(oldColor);
 		else {
