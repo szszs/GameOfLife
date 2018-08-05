@@ -1,7 +1,7 @@
 # Game of Life Simulator
 ![alt text](https://i.imgur.com/6bH8f7O.png)
 ## Overview
-This is a simulation program made to visualize and construct worlds for John Conway's Game of Life. It is written in Java using the standard Swing toolkit.
+This is a simulation program made to visualize and construct worlds for John Conway's Game of Life. It is written in Java using the standard Swing toolkit. Video preview: https://www.youtube.com/watch?v=qiE-GQUqtyU
 
 ### Main Features:
 * Operates on an infinite zoomable, pannable grid
