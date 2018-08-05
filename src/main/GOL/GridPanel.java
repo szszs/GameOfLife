@@ -74,7 +74,7 @@ public class GridPanel extends JPanel{
 	// control
 	public boolean pause = true;
 	public boolean gridOn = false;
-	public int msDelay = 100;
+	public int msDelay = 50;
 	public final int minDelay = 10;
 	
 	public GridPanel(int newtileSize, int viewableHeight, int viewableWidth, int gridPixelWidth, int gridPixelHeight, int topLeftX, int topLeftY) {

@@ -8,9 +8,9 @@ public class Tile {
 	public int age;
 	private Color color;
 	public static Color gridColor = Color.BLACK;
-	public static Color youngColor = new Color(204, 102, 0);
-	public static Color oldColor = new Color(100, 0, 0);
-	public static int maxAge=100;
+	public static Color youngColor = new Color(200, 200, 210);
+	public static Color oldColor = new Color(100, 100, 110);
+	public static int maxAge=10;
 	
 	public Tile(int x, int y) {
 		changeCoordinates(x, y);

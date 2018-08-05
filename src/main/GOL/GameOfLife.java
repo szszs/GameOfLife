@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class GameOfLife{
 	public static void main(String[] args) {
-		MainFrame mainFrame = new MainFrame("GOL");
+		MainFrame mainFrame = new MainFrame("Game Of Life");
 		
 		try {
 			EventQueue.invokeAndWait(new Runnable() {
