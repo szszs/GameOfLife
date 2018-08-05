@@ -369,7 +369,16 @@ public class MainFrame extends JFrame{
 				int width = bottomRightCoords.x - topLeftCoords.x + 1;
 				int height = bottomRightCoords.y - topLeftCoords.y + 1;
 				
-				lines.add(String.format("x = %d, y = %d", width, height));
+				String headerLine = String.format("x = %d, y = %d", width, height);
+				headerLine += ", rule = B";
+				for(int bornRule:bornRules) {
+					headerLine += Integer.toString(bornRule);
+				}
+				headerLine += "/S";
+				for(int surviveRule:surviveRules) {
+					headerLine += Integer.toString(surviveRule);
+				}
+				lines.add(headerLine);
 				
 				String rawLines = "";
 				int emptyLinesTrack = 0;
@@ -494,6 +503,44 @@ public class MainFrame extends JFrame{
 						xLen = lineScanner.nextInt();
 						yLen = lineScanner.nextInt();
 						lineScanner.close();
+						// check if rule exists
+						Matcher ruleMatcher = Pattern.compile("(?i)(rule)|\\d|B|S").matcher(line);
+						boolean ruleExists = false;
+						while (ruleMatcher.find()) {
+							if (ruleMatcher.group().toLowerCase().equals("rule")) {
+								ruleExists = true;
+								break;
+							}
+						}
+						if (ruleExists) {
+							bornRules.clear();
+							surviveRules.clear();
+							
+							// find born rules
+							while (ruleMatcher.find()) {
+								if (ruleMatcher.group().toLowerCase().equals("b")) {
+									break;
+								}
+							}
+							while (ruleMatcher.find()) {
+								String nextBornToken = ruleMatcher.group();
+								if (nextBornToken.toLowerCase().equals("s")) {
+									break;
+								}
+								try {
+									bornRules.add(Integer.parseInt(nextBornToken));
+								} catch (Exception NumberFormatException) {}
+							}
+							// find survive rules
+							while (ruleMatcher.find()) {
+								try {
+									surviveRules.add(Integer.parseInt(ruleMatcher.group()));
+								} catch (Exception NumberFormatException) {}
+							}
+							
+							System.out.println(bornRules);
+							System.out.println(surviveRules);
+						}
 						break;
 					}
 				}
