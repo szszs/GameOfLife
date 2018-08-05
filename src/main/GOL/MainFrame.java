@@ -537,9 +537,6 @@ public class MainFrame extends JFrame{
 									surviveRules.add(Integer.parseInt(ruleMatcher.group()));
 								} catch (Exception NumberFormatException) {}
 							}
-							
-							System.out.println(bornRules);
-							System.out.println(surviveRules);
 						}
 						break;
 					}
